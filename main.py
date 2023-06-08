@@ -3,12 +3,11 @@ Main entry point for the Brandish application.
 This script orchestrates the entire process by calling the appropriate functions from the other modules.
 """
 
-from . import notion_interface
-from . import agent_manager
-from . import data_persistence
-from . import output_generator
-from . import log_manager
-from .notion_interface import NotionInterface
+from brandish import agent_manager
+from brandish import data_persistence
+from brandish import output_generator
+from brandish import log_manager
+from brandish.notion_interface import NotionInterface
 import os
 
 

@@ -73,7 +73,7 @@ class NotionInterface:
                 "database_id": self.database_id,
                 "filter": {
                     "property": filter_property,
-                    filter_operator: filter_value
+                    "text": {filter_operator: filter_value}
                 }
             }
         ).get("results")
