@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "brandish"
+version = "0.1.0"
+description = "Brandish the Narrative Marketing App."
+authors = ["palebluepaul <paul.scott@paleblueconsulting.co.uk>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+notion = "^0.0.28"
+openai = "^0.27.0"
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
+black = "^21.9b0"
+isort = "^5.9.3"
+flake8 = "^3.9.2"
+milvus = "^1.1.2"
+langchain = "^0.1.0"
+llama_index = "^0.1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
