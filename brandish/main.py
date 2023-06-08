@@ -8,11 +8,20 @@ from . import agent_manager
 from . import data_persistence
 from . import output_generator
 from . import log_manager
+from .notion_interface import NotionInterface
+import os
+
 
 def main():
     """
     Main function to orchestrate the Brandish application process.
     """
+
+    # Initialize a new NotionInterface instance with the specified authentication token and database ID
+    notion_auth_token = os.environ.get("NOTION_AUTH_TOKEN")
+    notion_database_id = os.environ.get("NOTION_DATABASE_ID")
+    notion_interface = NotionInterface(auth_token=notion_auth_token, database_id=notion_database_id)
+
     # Monitor Notion folder for new documents
     notion_interface.monitor_notion_folder()
 
