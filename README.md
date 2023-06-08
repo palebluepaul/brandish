@@ -1,6 +1,6 @@
-# Brandish
+# Brandish the Narrative
 
-Brandish is a project that monitors a Notion briefs folder for new documents, retrieves new briefs and agent configurations, instantiates and invokes agents, handles data persistence, generates output briefs, writes outputs back to Notion, and logs activities.
+Brandish the Narrative is a project that monitors a Notion briefs folder for new documents, retrieves new briefs and agent configurations, instantiates and invokes agents, handles data persistence, generates output briefs, writes outputs back to Notion, and logs activities.
 
 ## Getting Started
 
@@ -26,10 +26,10 @@ Then, install the dependencies using Poetry:
 poetry install
 ```
 
-Usage
+### Usage
 Provide instructions on how to use your project.
 
-Running the tests
+### Running the tests
 Run the tests using pytest:
 ```bash
 poetry run pytest
