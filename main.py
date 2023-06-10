@@ -9,6 +9,7 @@ from brandish import output_generator
 from brandish import log_manager
 from brandish.notion_interface import NotionInterface
 import os
+import logging
 
 
 def main():
@@ -20,6 +21,9 @@ def main():
     notion_auth_token = os.environ.get("NOTION_AUTH_TOKEN")
     notion_database_id = os.environ.get("NOTION_DATABASE_ID")
     notion_interface = NotionInterface(auth_token=notion_auth_token, database_id=notion_database_id)
+
+    # Log that the processing run has started
+    notion_interface.log(logging.INFO, "Started a processing run")
 
     # Monitor Notion folder for new documents
     notion_interface.monitor_notion_folder()
