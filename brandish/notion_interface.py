@@ -80,13 +80,14 @@ class NotionInterface:
         if child_blocks:
             # If there's at least one child block, append the log message to its content
             log_block = child_blocks[0]
-            new_content = log_block["paragraph"]["text"][0]["text"]["content"] + "\n" + log_message
+
+            new_content = log_block["paragraph"]["rich_text"][0]["text"]["content"] + "\n" + log_message
 
             # Update the log block with the new content
             self.notion.blocks.update(
                 log_block["id"],
                 paragraph={
-                    "text": [
+                    "rich_text": [
                         {
                             "type": "text",
                             "text": {
@@ -118,7 +119,43 @@ class NotionInterface:
                 ]
             )
 
+    def convert_block_to_markdown(block, level=0):
+        """
+        Converts a block from Notion into Markdown format.
+        """
+        markdown = ""
 
+        block_type = block["type"]
+        text = block["text"]["content"]
+
+        if block_type == "heading_1":
+            markdown += f"{'#' * (level + 1)} {text}\n"
+        elif block_type == "heading_2":
+            markdown += f"{'#' * (level + 2)} {text}\n"
+        elif block_type == "heading_3":
+            markdown += f"{'#' * (level + 3)} {text}\n"
+        elif block_type == "paragraph":
+            markdown += f"{'  ' * level}{text}\n"
+        elif block_type == "bulleted_list_item":
+            markdown += f"{'  ' * level}* {text}\n"
+        elif block_type == "numbered_list_item":
+            markdown += f"{'  ' * level}1. {text}\n"
+
+        for child_block in block.get("children", []):
+            markdown += convert_block_to_markdown(child_block, level + 1)
+
+        return markdown
+
+    def convert_to_markdown(brief):
+        """
+        Converts a brief from Notion into Markdown format.
+        """
+        markdown = ""
+
+        for block in brief:
+            markdown += convert_block_to_markdown(block)
+
+        return markdown
 
 
     def monitor_notion_folder(self):
@@ -137,6 +174,10 @@ class NotionInterface:
             }
         ).get("results")
 
+        # Log the number of briefs retrieved
+        self.log(logging.INFO, f"Retrieved {len(results)} briefs.")
+
+        # Create a new report page for each brief
         for result in results:
             self.create_report_page(result)
 
