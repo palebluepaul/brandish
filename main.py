@@ -25,7 +25,6 @@ def main():
     notion_interface.monitor_notion_folder()
 
     # Retrieve new brief and agent configurations from Notion
-    notion_interface.retrieve_notion_brief()
     notion_interface.retrieve_agent_configurations()
 
     # Instantiate and invoke agents
@@ -39,7 +38,7 @@ def main():
     output_generator.generate_output()
 
     # Write output and logs back to Notion
-    notion_interface.write_output_to_notion()
+    # notion_interface.create_report_page()
     log_manager.write_logs_to_notion()
 
 if __name__ == "__main__":
