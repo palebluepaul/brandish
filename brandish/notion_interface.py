@@ -7,7 +7,6 @@ class NotionInterface:
     Class to interface with Notion API using notion-client.
     """
 
-
     def __init__(self, auth_token, database_id):
         """
         Initializes a new NotionInterface instance with the specified authentication token and database ID.
@@ -177,9 +176,7 @@ class NotionInterface:
         # Log the number of briefs retrieved
         self.log(logging.INFO, f"Retrieved {len(results)} briefs.")
 
-        # Create a new report page for each brief
-        for result in results:
-            self.create_report_page(result)
+        return results
 
     def create_report_page(self, brief):
         """

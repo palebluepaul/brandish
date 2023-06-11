@@ -6,7 +6,6 @@ This script orchestrates the entire process by calling the appropriate functions
 from brandish import agent_manager
 from brandish import data_persistence
 from brandish import output_generator
-from brandish import log_manager
 from brandish.notion_interface import NotionInterface
 import os
 import logging
@@ -26,24 +25,27 @@ def main():
     notion_interface.log(logging.INFO, "Started a processing run")
 
     # Monitor Notion folder for new documents
-    notion_interface.monitor_notion_folder()
+    briefs = notion_interface.monitor_notion_folder()
 
-    # Retrieve new brief and agent configurations from Notion
-    notion_interface.retrieve_agent_configurations()
+    for brief in briefs:
+        # Retrieve new brief and agent configurations from Notion
+        notion_interface.retrieve_agent_configurations()
 
-    # Instantiate and invoke agents
-    agent_manager.instantiate_agents()
-    agent_manager.invoke_agents()
+        # Instantiate and invoke agents
+        agent_manager.instantiate_agents()
+        agent_manager.invoke_agents()
 
-    # Persist data
-    data_persistence.persist_data()
+        # Persist data
+        data_persistence.persist_data()
 
-    # Generate output briefs from agents
-    output_generator.generate_output()
+        # Generate output briefs from agents
+        output_generator.generate_output()
 
-    # Write output and logs back to Notion
-    # notion_interface.create_report_page()
-    log_manager.write_logs_to_notion()
+        # Create report page in Notion
+        notion_interface.create_report_page(brief)
+
+    # Log that the processing run has completed
+    notion_interface.log(logging.INFO, "Completed a processing run")
 
 if __name__ == "__main__":
     main()
