@@ -7,8 +7,10 @@ from brandish import agent_manager
 from brandish import data_persistence
 from brandish import output_generator
 from brandish.notion_interface import NotionInterface
+from brandish.notion_interface import NotionHandler
 import os
 import logging
+import promptlayer
 
 
 def main():
@@ -18,17 +20,33 @@ def main():
 
     # Initialize a new NotionInterface instance with the specified authentication token and database ID
     notion_auth_token = os.environ.get("NOTION_AUTH_TOKEN")
-    notion_database_id = os.environ.get("NOTION_DATABASE_ID")
+    notion_database_id = os.environ.get("NOTION_BRANDISH_DATABASE_ID")
     notion_interface = NotionInterface(auth_token=notion_auth_token, database_id=notion_database_id)
 
+    # Create a new Notion handler
+    notion_handler = NotionHandler(notion_interface)
+
+    # Create a new logger
+    logger = logging.getLogger()
+
+    # Set the logger's level to INFO
+    logger.setLevel(logging.INFO)
+
+    # Add the Notion handler to the logger
+    logger.addHandler(notion_handler)
+
     # Log that the processing run has started
-    notion_interface.log(logging.INFO, "Started a processing run")
+    logger.info("Started a processing run")
 
     # Monitor Notion folder for new documents
-    briefs = notion_interface.monitor_notion_folder()
+    briefs = notion_interface.retrieve_briefs()
+
+    # Log the number of briefs retrieved
+    logger.info(f"Retrieved {len(briefs)} briefs.")
 
     for brief in briefs:
-        # Retrieve new brief and agent configurations from Notion
+
+        # Retrieve agent configurations from Notion
         notion_interface.retrieve_agent_configurations()
 
         # Instantiate and invoke agents
@@ -45,7 +63,8 @@ def main():
         notion_interface.create_report_page(brief)
 
     # Log that the processing run has completed
-    notion_interface.log(logging.INFO, "Completed a processing run")
+    logger.info("Completed a processing run")
+   
 
 if __name__ == "__main__":
     main()

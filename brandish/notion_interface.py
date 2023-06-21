@@ -2,27 +2,25 @@ from notion_client import Client
 import logging
 from datetime import datetime
 
-class NotionInterface:
+class NotionHandler(logging.Handler):
     """
-    Class to interface with Notion API using notion-client.
+    Custom logging handler that logs messages to Notion.
     """
 
-    def __init__(self, auth_token, database_id):
+    def __init__(self, notion_interface):
         """
-        Initializes a new NotionInterface instance with the specified authentication token and database ID.
+        Initializes a new NotionHandler instance with the specified NotionInterface.
         """
-        # Initialize a new Notion client with the provided authentication token
-        self.notion = Client(auth=auth_token)
-        # Set the database ID
-        self.database_id = database_id
+        super().__init__()
+        self.notion_interface = notion_interface
 
         # Construct the name of the log page
         log_page_name = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " Log"
 
         # Get the log page if it exists
-        results = self.notion.databases.query(
+        results = self.notion_interface.notion.databases.query(
             **{
-                "database_id": self.database_id,
+                "database_id": self.notion_interface.database_id,
                 "filter": {
                     "property": "Name",
                     "title": {
@@ -37,7 +35,7 @@ class NotionInterface:
         if self.log_page is None:
             new_page = {
                 "parent": {
-                    "database_id": self.database_id
+                    "database_id": self.notion_interface.database_id
                 },
                 "properties": {
                     "Name": {
@@ -58,23 +56,33 @@ class NotionInterface:
                     }
                 }
             }
-            self.log_page = self.notion.pages.create(**new_page)
+            self.log_page = self.notion_interface.notion.pages.create(**new_page)
 
-    def log(self, level, message):
+    def emit(self, record):
+        """
+        Logs the specified logging record to Notion.
+        """
+        #self.notion_interface.log(record.levelno, record.getMessage())
+
         """
         Appends the message formatted with a timestamp and the correct severity level to the log page.
         """
+
+        # Ignore log messages from the httpx library
+        if record.name.startswith("httpx"):
+            return
+        
         # Get the current timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Convert the logging level to a string
-        level_name = logging.getLevelName(level)
+        level_name = logging.getLevelName(record.levelno)
 
         # Create the log message
-        log_message = f"[{level_name.upper()}] {timestamp}: {message}"
+        log_message = f"[{level_name.upper()}] {timestamp}: {record.getMessage()}"
 
         # Retrieve the child blocks of the log page
-        child_blocks = self.notion.blocks.children.list(self.log_page["id"])["results"]
+        child_blocks = self.notion_interface.notion.blocks.children.list(self.log_page["id"])["results"]
 
         if child_blocks:
             # If there's at least one child block, append the log message to its content
@@ -83,7 +91,7 @@ class NotionInterface:
             new_content = log_block["paragraph"]["rich_text"][0]["text"]["content"] + "\n" + log_message
 
             # Update the log block with the new content
-            self.notion.blocks.update(
+            self.notion_interface.notion.blocks.update(
                 log_block["id"],
                 paragraph={
                     "rich_text": [
@@ -98,7 +106,7 @@ class NotionInterface:
             )
         else:
             # If there are no child blocks, create a new one with the log message
-            self.notion.blocks.children.append(
+            self.notion_interface.notion.blocks.children.append(
                 self.log_page["id"],
                 children=[
                     {
@@ -118,63 +126,36 @@ class NotionInterface:
                 ]
             )
 
-    def convert_block_to_markdown(block, level=0):
+class NotionInterface:
+    """
+    Class to interface with Notion API using notion-client.
+    """
+
+    def __init__(self, auth_token, database_id):
         """
-        Converts a block from Notion into Markdown format.
+        Initializes a new NotionInterface instance with the specified authentication token and database ID.
         """
-        markdown = ""
+        # Initialize a new Notion client with the provided authentication token
+        self.notion = Client(auth=auth_token)
+        # Set the database ID
+        self.database_id = database_id
 
-        block_type = block["type"]
-        text = block["text"]["content"]
 
-        if block_type == "heading_1":
-            markdown += f"{'#' * (level + 1)} {text}\n"
-        elif block_type == "heading_2":
-            markdown += f"{'#' * (level + 2)} {text}\n"
-        elif block_type == "heading_3":
-            markdown += f"{'#' * (level + 3)} {text}\n"
-        elif block_type == "paragraph":
-            markdown += f"{'  ' * level}{text}\n"
-        elif block_type == "bulleted_list_item":
-            markdown += f"{'  ' * level}* {text}\n"
-        elif block_type == "numbered_list_item":
-            markdown += f"{'  ' * level}1. {text}\n"
-
-        for child_block in block.get("children", []):
-            markdown += convert_block_to_markdown(child_block, level + 1)
-
-        return markdown
-
-    def convert_to_markdown(brief):
+    def retrieve_briefs(self):
         """
-        Converts a brief from Notion into Markdown format.
-        """
-        markdown = ""
-
-        for block in brief:
-            markdown += convert_block_to_markdown(block)
-
-        return markdown
-
-
-    def monitor_notion_folder(self):
-        """
-        Function to monitor a Notion folder for new documents.
+        Function to retrieve unprocessed briefs
         """
         results = self.notion.databases.query(
             **{
                 "database_id": self.database_id,
                 "filter": {
-                    "property": "Status",
+                    "property": "Status", 
                     "status": {
                         "equals": "Pending Brief"
                     }
                 }
             }
         ).get("results")
-
-        # Log the number of briefs retrieved
-        self.log(logging.INFO, f"Retrieved {len(results)} briefs.")
 
         return results
 
@@ -205,7 +186,13 @@ class NotionInterface:
                         "name": "Done"
                     }
                 },
-                # Add other properties here
+                "Tags": {
+                        "multi_select": [
+                            {
+                                "name": "Report"
+                            }
+                        ]
+                    }
             }
         }
         self.notion.pages.create(**new_page)
