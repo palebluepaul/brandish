@@ -159,12 +159,14 @@ class NotionInterface:
 
         return results
 
-    def create_report_page(self, brief):
+    def create_report_page(self, brief, response):
         """
         Function to create a new report page for the specified brief.
         """
         # Construct the name of the new page
         report_name = brief["properties"]["Name"]["title"][0]["text"]["content"] + " Report"
+
+        print(response)
 
         # Create a new page in the database
         new_page = {
@@ -195,14 +197,48 @@ class NotionInterface:
                     }
             }
         }
-        self.notion.pages.create(**new_page)
+        created_page = self.notion.pages.create(**new_page)
+
+        # Split the content into chunks
+        content_chunks = response.content.split('\n\n')
+
+        # Create a block for each chunk
+        for chunk in content_chunks:
+            text_block = {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": chunk
+                            }
+                        }
+                    ]
+                }
+            }
+            self.notion.blocks.children.append(created_page["id"], children=[text_block])
 
 
-    def retrieve_agent_configurations(self):
+    def retrieve_agent_configurations(self, brief):
         """
         Function to retrieve agent configurations from Notion.
         """
-        
-        # TODO: Implement your processing logic here
+        print(brief)
+        """
+        results = self.notion.databases.query(
+            **{
+                "database_id": ,
+                "filter": {
+                    "property": "Status", 
+                    "status": {
+                        "equals": brief.
+                    }
+                }
+            }
+        ).get("results")
+    """
+    #    return results
 
 

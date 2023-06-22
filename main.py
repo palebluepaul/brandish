@@ -11,6 +11,9 @@ from brandish.notion_interface import NotionHandler
 import os
 import logging
 import promptlayer
+from llama_index import ListIndex, NotionPageReader
+#from IPython.display import Markdown, display
+import os
 
 
 def main():
@@ -45,13 +48,15 @@ def main():
     logger.info(f"Retrieved {len(briefs)} briefs.")
 
     for brief in briefs:
+        page_ids = [brief["id"]]
+        documents = NotionPageReader(integration_token=notion_auth_token).load_data(page_ids=page_ids)
 
         # Retrieve agent configurations from Notion
-        notion_interface.retrieve_agent_configurations()
+        notion_interface.retrieve_agent_configurations(brief)
 
         # Instantiate and invoke agents
         agent_manager.instantiate_agents()
-        agent_manager.invoke_agents()
+        response = agent_manager.invoke_agents(documents)
 
         # Persist data
         data_persistence.persist_data()
@@ -60,7 +65,7 @@ def main():
         output_generator.generate_output()
 
         # Create report page in Notion
-        notion_interface.create_report_page(brief)
+        notion_interface.create_report_page(brief, response)
 
     # Log that the processing run has completed
     logger.info("Completed a processing run")
